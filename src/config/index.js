@@ -14,7 +14,6 @@ export const API_HOST = process.env.VUE_APP_API_HOST || window.location.protocol
 
 
 export const ROUTER_WHITELIST = [
-    '/login',
     "/401", "/404", "/500","/readme/main"
 ]
 

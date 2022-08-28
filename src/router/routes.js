@@ -77,5 +77,34 @@ export const authRoutes = [
                 },
             }
         ]
-    }
+    },
+    {
+        path: "/system",
+        component: Home,
+        icon: "icon-xitongguanli",
+        name: "系统管理",
+        meta: {
+            authRule: ["/system"]
+        },
+        children: [
+            {
+                path: "engine",
+                component: () => import('../views/system/engine.vue'),
+                name: "引擎配置",
+                icon: "",
+                meta: {
+                    authRule: ["/admin/engine/list"]
+                },
+            },
+            {
+                path: "app",
+                component: () => import('../views/system/app.vue'),
+                name: "应用列表",
+                icon: "",
+                meta: {
+                    authRule: ["/admin/app/list"]
+                },
+            },
+        ]
+    },
 ]

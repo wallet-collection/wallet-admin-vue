@@ -20,6 +20,12 @@ router.beforeEach(async (to, from, next) => {
         return
     }
 
+    if (!getToken()) {
+        next({
+            path: "/login"
+        })
+    }
+
     let authRules = store.getters.authRules
     if (!authRules || authRules.length === 0) {
         try {
@@ -44,12 +50,6 @@ router.beforeEach(async (to, from, next) => {
     if (ROUTER_WHITELIST.includes(to.path)) {
         next()
         return;
-    }
-
-    if (!getToken()) {
-        next({
-            path: "/login"
-        })
     }
 
     // 没有动态改变权限的需求可直接next() 删除下方权限判断 ↓
