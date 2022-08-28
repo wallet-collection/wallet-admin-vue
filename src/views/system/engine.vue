@@ -76,12 +76,6 @@
           </template>
         </el-table-column>
         <el-table-column
-            label="启动状态">
-          <template slot-scope="scope">
-            <el-tag :type="scope.row.sync_status | syncStatusFilterType">{{ scope.row.sync_status | syncStatusFilterName }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column
             width="180"
             label="创建时间">
           <template slot-scope="scope">
@@ -96,6 +90,7 @@
           </template>
         </el-table-column>
         <el-table-column
+            width="200"
             label="操作"
             fixed="right">
           <template slot-scope="scope">
@@ -103,11 +98,7 @@
             </el-button>
             <el-button type="text" size="small" @click.native="handleDel(scope.$index, scope.row)">删除
             </el-button>
-            <el-button type="text" size="small" @click.native="handleSyncStatus(scope.$index, scope.row, 1)">启动
-            </el-button>
-            <el-button type="text" size="small" @click.native="handleSyncStatus(scope.$index, scope.row, 0)">停止
-            </el-button>
-            <el-button type="text" size="small" @click.native="handleSyncStatus(scope.$index, scope.row, -1)">重启
+            <el-button type="text" size="small" @click.native="handleRpc(scope.$index, scope.row)">rpc列表
             </el-button>
           </template>
         </el-table-column>
@@ -184,12 +175,153 @@
         <el-button type="primary" @click.native="formSubmit()" :loading="formLoading">提交</el-button>
       </div>
     </el-dialog>
+
+    <!--表单-->
+    <el-dialog
+        :close-on-click-modal="false"
+        title="引擎rpc列表"
+        :visible.sync="rpcVisible"
+        :before-close="hideRpc"
+        width="85%"
+        top="5vh">
+      <el-form :inline="true" :model="rpcQuery" class="query-form" size="mini">
+        <el-form-item class="query-form-item" label="网络名称">
+          <el-input v-model="rpcQuery.network_name" placeholder="网络名称"></el-input>
+        </el-form-item>
+        <el-form-item class="query-form-item" label="币种符号">
+          <el-input v-model="rpcQuery.coin_symbol" placeholder="币种符号"></el-input>
+        </el-form-item>
+        <el-form-item class="query-form-item">
+          <el-select v-model="rpcQuery.status" placeholder="状态">
+            <el-option label="全部" :value="-1"></el-option>
+            <el-option label="禁用" :value="0"></el-option>
+            <el-option label="正常" :value="1"></el-option>
+          </el-select>
+        </el-form-item>
+
+        <el-form-item>
+          <el-button-group>
+            <el-button type="primary" icon="el-icon-refresh" @click="onRpcReset"></el-button>
+            <el-button type="primary" icon="search" @click="onRpcSubmit">查询</el-button>
+            <el-button type="primary" @click.native="handleRpcForm(null,null)">新增</el-button>
+          </el-button-group>
+        </el-form-item>
+      </el-form>
+      <el-scrollbar class="table-scrollbar" wrap-style="overflow-x: hidden;">
+        <el-table
+            v-loading="rpcLoading"
+            :data="rpcList"
+            style="width: 100%;">
+          <el-table-column
+              label="ID"
+              prop="id"
+              fixed>
+          </el-table-column>
+          <el-table-column
+              label="网络名称"
+              fixed>
+            <template slot-scope="scope">
+              <span>{{ scope.row.network_name }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+              label="币种符号"
+              fixed>
+            <template slot-scope="scope">
+              <span>{{ scope.row.coin_symbol }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+              :show-overflow-tooltip="true"
+              label="URL"
+              prop="url">
+          </el-table-column>
+          <el-table-column
+              label="状态">
+            <template slot-scope="scope">
+              <el-tag :type="scope.row.status | statusFilterType">{{ scope.row.status | statusFilterName }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column
+              width="180"
+              label="创建时间">
+            <template slot-scope="scope">
+              <span>{{ scope.row.create_time | parseTime }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+              width="180"
+              label="最后更新时间">
+            <template slot-scope="scope">
+              <span>{{ scope.row.modified_time | parseTime }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+              width="200"
+              label="操作"
+              fixed="right">
+            <template slot-scope="scope">
+              <el-button type="text" size="small" @click.native="handleRpcForm(scope.$index, scope.row)">编辑
+              </el-button>
+              <el-button type="text" size="small" @click.native="handleDelRpc(scope.$index, scope.row)">删除
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-scrollbar>
+
+      <el-pagination
+          :page-size="rpcQuery.limit"
+          @current-change="handleCurrentChangeRpc"
+          layout="prev, pager, next"
+          :total="rpcTotal">
+      </el-pagination>
+
+
+      <!--表单-->
+      <el-dialog
+          :close-on-click-modal="false"
+          :title="rpcFormMap[rpcFormName]"
+          :visible.sync="rpcFormVisible"
+          :before-close="hideRpcForm"
+          append-to-body
+          top="5vh">
+        <el-form :model="rpcFormData" :rules="rpcFormRules" ref="dataRpcForm">
+          <el-form-item label="网络名称" prop="network_name">
+            <el-input v-model="rpcFormData.network_name" auto-complete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="币种名称" prop="coin_symbol">
+            <el-input v-model="rpcFormData.coin_symbol" auto-complete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="URL地址" prop="url">
+            <el-input v-model="rpcFormData.url" auto-complete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="状态" prop="status">
+            <el-radio-group v-model="rpcFormData.status">
+              <el-radio :label="0">禁用</el-radio>
+              <el-radio :label="1">正常</el-radio>
+            </el-radio-group>
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click.native="hideRpcForm">取消</el-button>
+          <el-button type="primary" @click.native="formRpcSubmit()" :loading="rpcFormLoading">提交</el-button>
+        </div>
+      </el-dialog>
+
+    </el-dialog>
+
+
+
+
+
   </div>
 
 </template>
 
 <script>
-import {engineDelete, engineList, engineSave, engineSyncStatus} from "../../api/system/engine";
+import {engineDelete, engineList, engineSave} from "../../api/system/engine";
+import {engineRpcDelete, engineRpcList, engineRpcSave} from "../../api/system/engine_rpc";
 
 const formJson = {
   id: "",
@@ -209,6 +341,13 @@ const formJson = {
   confirms: 0,
   status: 0,
 };
+const rpcFormJson = {
+  id: "",
+  network_name: "",
+  coin_symbol: "",
+  url: "",
+  status: 0,
+}
 export default {
   computed: {
   },
@@ -236,53 +375,88 @@ export default {
       formData: formJson,
       formRules: {
         network_name: [
-          {required: true, message: "请选择语言", trigger: "blur"}
+          {required: true, message: "请输入网络名称", trigger: "blur"}
         ],
         coin_symbol: [
-          {required: true, message: "请输入Key", trigger: "blur"}
+          {required: true, message: "请输入币种符号", trigger: "blur"}
         ],
         protocol: [
-          {required: true, message: "请输入标题", trigger: "blur"}
+          {required: true, message: "请输入协议", trigger: "blur"}
         ],
         contract: [
-          {required: true, message: "请输入内容", trigger: "blur"}
+          {required: true, message: "请输入合约地址", trigger: "blur"}
         ],
         contract_type: [
-          {required: true, message: "请输入内容", trigger: "blur"}
+          {required: true, message: "请输入合约类型", trigger: "blur"}
         ],
         decimals: [
-          {required: true, message: "请输入内容", trigger: "blur"}
+          {required: true, message: "请输入精度", trigger: "blur"}
         ],
         block_init: [
-          {required: true, message: "请输入内容", trigger: "blur"}
+          {required: true, message: "请输入初始化区块", trigger: "blur"}
         ],
         block_after_time: [
-          {required: true, message: "请输入内容", trigger: "blur"}
+          {required: true, message: "请输入同步区块时最新块的等待时间", trigger: "blur"}
         ],
         receipt_count: [
-          {required: true, message: "请输入内容", trigger: "blur"}
+          {required: true, message: "请输入票据的worker数量", trigger: "blur"}
         ],
         receipt_after_time: [
-          {required: true, message: "请输入内容", trigger: "blur"}
+          {required: true, message: "请输入获取票据的间隔", trigger: "blur"}
         ],
         call_count: [
-          {required: true, message: "请输入内容", trigger: "blur"}
+          {required: true, message: "请输入回调的worker数量", trigger: "blur"}
         ],
         call_after_time: [
-          {required: true, message: "请输入内容", trigger: "blur"}
+          {required: true, message: "请输入回调的等待时间", trigger: "blur"}
         ],
         call_max_retry: [
-          {required: true, message: "请输入内容", trigger: "blur"}
+          {required: true, message: "请输入回调最多错误次数", trigger: "blur"}
         ],
         confirms: [
-          {required: true, message: "请输入内容", trigger: "blur"}
+          {required: true, message: "请输入确认块", trigger: "blur"}
         ],
         status: [
           {required: true, message: "请选择状态", trigger: "change"}
         ]
       },
       deleteLoading: false,
-      syncStatusLoading: false,
+
+      rpcVisible: false,
+      rpcQuery: {
+        network_name: "",
+        coin_symbol: "",
+        status: -1,
+        page: 1,
+        limit: 20,
+      },
+      rpcList: [],
+      rpcTotal: 0,
+      rpcLoading: true,
+      rpcIndex: null,
+      rpcFormName: null,
+      rpcFormMap: {
+        add: "新增",
+        edit: "编辑"
+      },
+      rpcFormLoading: false,
+      rpcFormVisible: false,
+      rpcFormData: rpcFormJson,
+      rpcFormRules: {
+        network_name: [
+          {required: true, message: "请输入网络名称", trigger: "blur"}
+        ],
+        coin_symbol: [
+          {required: true, message: "请输入币种符号", trigger: "blur"}
+        ],
+        url: [
+          {required: true, message: "请输入URL", trigger: "blur"}
+        ],
+        status: [
+          {required: true, message: "请选择状态", trigger: "change"}
+        ]
+      },
+      rpcDeleteLoading: false,
     };
   },
   methods: {
@@ -416,36 +590,152 @@ export default {
             });
       }
     },
-    // 更新状态
-    handleSyncStatus(index, row, syncStatus) {
+    //
+    hideRpc() {
+      // 更改值
+      this.rpcVisible = !this.rpcVisible;
+      return true;
+    },
+    //
+    handleRpc(index, row) {
+      this.rpcVisible = true;
+      this.rpcQuery.network_name = row.network_name
+      this.rpcQuery.coin_symbol = row.coin_symbol
+      this.getListRpc()
+    },
+
+    onRpcReset() {
+      this.$router.push({
+        path: ""
+      });
+      this.rpcQuery = {
+        network_name: "",
+        coin_symbol: "",
+        status: -1,
+        page: 1,
+        limit: 20,
+      };
+      this.getListRpc();
+    },
+    onRpcSubmit() {
+      this.$router.push({
+        path: "",
+        query: this.rpcQuery
+      });
+      this.getListRpc();
+    },
+    handleCurrentChangeRpc(val) {
+      this.rpcQuery.page = val;
+      this.getListRpc();
+    },
+    getListRpc() {
+      this.rpcLoading = true;
+      engineRpcList(this.rpcQuery)
+          .then(response => {
+            this.rpcLoading = false;
+            if (response.code) {
+              this.$message.error(response.message);
+            }
+            this.rpcList = response.data.list || [];
+            this.rpcTotal = response.data.total || 0;
+          })
+          .catch(() => {
+            this.rpcLoading = false;
+            this.rpcList = [];
+            this.rpcTotal = 0;
+          });
+    },
+
+    // 隐藏表单
+    hideRpcForm() {
+      // 更改值
+      this.rpcFormVisible = !this.rpcFormVisible;
+      return true;
+    },
+    // 刷新表单
+    resetRpcForm() {
+      if (this.$refs["dataRpcForm"]) {
+        // 清空验证信息表单
+        this.$refs["dataRpcForm"].clearValidate();
+        // 刷新表单
+        this.$refs["dataRpcForm"].resetFields();
+      }
+    },
+    // 显示表单
+    handleRpcForm(index, row) {
+      this.rpcFormVisible = true;
+      this.rpcFormData = JSON.parse(JSON.stringify(rpcFormJson));
+      this.rpcFormData.network_name = this.rpcQuery.network_name
+      this.rpcFormData.coin_symbol = this.rpcQuery.coin_symbol
+      if (row !== null) {
+        this.rpcFormData = Object.assign({}, row);
+      }
+      this.rpcFormName = "add";
+      if (index !== null) {
+        this.rpcIndex = index;
+        this.rpcFormName = "edit";
+      }
+    },
+    formRpcSubmit() {
+      this.$refs["dataRpcForm"].validate(valid => {
+        if (valid) {
+          this.rpcFormLoading = true;
+          let data = Object.assign({}, this.rpcFormData);
+          engineRpcSave(data, this.rpcFormName).then(response => {
+            this.rpcFormLoading = false;
+            if (response.code) {
+              this.$message.error(response.message);
+              return false;
+            }
+            if (this.rpcFormName === "add") {
+              // 向头部添加数据
+              if (response.data && response.data.id) {
+                data.id = response.data.id;
+                data.create_time = new Date()
+                data.modified_time = new Date()
+                this.rpcList.unshift(data);
+              }
+            } else {
+              data.modified_time = new Date()
+              this.rpcList.splice(this.index, 1, data);
+            }
+            this.$message.success("操作成功");
+            // 刷新表单
+            this.resetRpcForm();
+            this.hideRpcForm()
+          });
+        }
+      });
+    },
+    // 删除
+    handleDelRpc(index, row) {
       if (row.id) {
-        this.$confirm("确认更新当前引擎状态?", "提示", {
+        this.$confirm("确认删除该记录吗?", "提示", {
           type: "warning"
         })
             .then(() => {
-              let para = {id: row.id,sync_status: syncStatus};
-              this.syncStatusLoading = true;
-              engineSyncStatus(para)
+              let para = {id: row.id};
+              this.rpcDeleteLoading = true;
+              engineRpcDelete(para)
                   .then(response => {
-                    this.syncStatusLoading = false;
+                    this.rpcDeleteLoading = false;
                     if (response.code) {
                       this.$message.error(response.message);
                       return false;
                     }
-                    this.$message.success("更新成功");
+                    this.$message.success("删除成功");
                     // 刷新数据
-                    row.sync_status = syncStatus !== 0 ? 1 : 0
-                    this.list.splice(index, row);
+                    this.rpcList.splice(index, 1);
                   })
                   .catch(() => {
-                    this.syncStatusLoading = false;
+                    this.rpcDeleteLoading = false;
                   });
             })
             .catch(() => {
-              this.$message.error("取消更新");
+              this.$message.error("取消删除");
             });
       }
-    }
+    },
   },
   filters: {
     statusFilterType(status) {
@@ -462,20 +752,6 @@ export default {
       };
       return statusMap[status];
     },
-    syncStatusFilterType(syncStatus) {
-      const syncStatusMap = {
-        0: "danger",
-        1: "success",
-      };
-      return syncStatusMap[syncStatus];
-    },
-    syncStatusFilterName(syncStatus) {
-      const syncStatusMap = {
-        0: "停止",
-        1: "已启动",
-      };
-      return syncStatusMap[syncStatus];
-    }
   },
   mounted() {
   },

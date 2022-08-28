@@ -54,12 +54,12 @@
         </el-table-column>
         <el-table-column
             :show-overflow-tooltip="true"
-            label="创建地址的来源"
+            label="来源"
             prop="create_origin">
         </el-table-column>
         <el-table-column
             :show-overflow-tooltip="true"
-            label="创建地址的合约哈希"
+            label="合约哈希"
             prop="create_init_hash">
         </el-table-column>
         <el-table-column
@@ -120,10 +120,10 @@
         <el-form-item label="密钥" prop="secret_key">
           <el-input v-model="formData.secret_key" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="创建合约的地址" prop="create_origin">
+        <el-form-item label="来源" prop="create_origin">
           <el-input v-model="formData.create_origin" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="创建地址的合约哈希" prop="create_init_hash">
+        <el-form-item label="合约哈希" prop="create_init_hash">
           <el-input v-model="formData.create_init_hash" auto-complete="off"></el-input>
         </el-form-item>
         <el-form-item label="提现的私钥" prop="withdraw_private_key">

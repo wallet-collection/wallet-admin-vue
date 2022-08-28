@@ -1,20 +1,20 @@
 import axios from "../../utils/axios";
 
 //
-export function engineList(params) {
+export function engineRpcList(params) {
     return axios({
-        url: "/admin/engine/list",
+        url: "/admin/engineRpc/list",
         method: "get",
         params: params
     });
 }
 
 //
-export function engineSave(data, formName, method = "post") {
+export function engineRpcSave(data, formName, method = "post") {
     let url =
         formName === "add"
-            ? "/admin/engine/add"
-            : "/admin/engine/update";
+            ? "/admin/engineRpc/add"
+            : "/admin/engineRpc/update";
     return axios({
         url: url,
         method: method,
@@ -23,9 +23,9 @@ export function engineSave(data, formName, method = "post") {
 }
 
 //
-export function engineDelete(data) {
+export function engineRpcDelete(data) {
     return axios({
-        url: "/admin/engine/delete",
+        url: "/admin/engineRpc/delete",
         method: "post",
         data: data
     });
