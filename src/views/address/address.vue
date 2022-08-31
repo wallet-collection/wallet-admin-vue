@@ -18,7 +18,7 @@
         <el-button-group>
           <el-button type="primary" icon="el-icon-refresh" @click="onReset"></el-button>
           <el-button type="primary" icon="search" @click="onSubmit">查询</el-button>
-          <el-button type="primary" icon="search" @click="handleCollection(-1)">归集全部</el-button>
+          <el-button type="primary" icon="search" @click="handleCollection(-1)" :loading="collectionSubLoading">归集全部</el-button>
         </el-button-group>
       </el-form-item>
     </el-form>
@@ -28,21 +28,18 @@
           :data="list"
           style="width: 100%;">
         <el-table-column
+            width="80"
             label="ID"
             prop="id"
             fixed>
         </el-table-column>
         <el-table-column
-            label="APPID">
-          <template slot-scope="scope">
-            <span>{{ scope.row.appid }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column
+            width="120"
             label="网络名称"
             prop="network_name">
         </el-table-column>
         <el-table-column
+            width="120"
             label="币种符号"
             prop="coin_symbol">
         </el-table-column>
@@ -52,16 +49,14 @@
             prop="address">
         </el-table-column>
         <el-table-column
-            :show-overflow-tooltip="true"
-            label="私钥"
-            prop="private_key">
+            width="120"
+            label="余额"
+            prop="balance">
         </el-table-column>
         <el-table-column
-            width="180"
-            label="创建时间">
-          <template slot-scope="scope">
-            <span>{{ scope.row.create_time | parseTime }}</span>
-          </template>
+            width="120"
+            label="归集信息"
+            prop="info">
         </el-table-column>
         <el-table-column
             width="180"
@@ -71,10 +66,11 @@
           </template>
         </el-table-column>
         <el-table-column
+            width="80"
             label="操作"
             fixed="right">
           <template slot-scope="scope">
-            <el-button type="text" size="small" @click.native="handleCollection(scope.$index)">归集
+            <el-button type="text" size="small" @click.native="handleCollection(scope.$index)" :loading="collectionSubLoading">归集
             </el-button>
           </template>
         </el-table-column>
@@ -196,31 +192,63 @@ export default {
       this.collectionVisible = true
       this.collectionIndex = index
     },
-    collection() {
-      if (this.collectionIndex >= 0) {
-        this.collectionSubmit(this.collectionIndex, this.list[this.collectionIndex])
-      } else {
-        this.collectionAll()
+    async collection() {
+
+      if (this.collectionSubLoading) {
+        this.$message.error("当前有未归集完成的任务，请稍后....")
+        return false
       }
+
+      this.collectionSubLoading = true
+
+      this.$notify({
+        title: '警告',
+        message: '归集中请勿关闭页面',
+        type: 'warning',
+        duration: 0
+      });
+
+      this.collectionVisible = false
+
+      if (this.collectionIndex >= 0) {
+        await this.collectionSubmit(this.collectionIndex, this.list[this.collectionIndex])
+      } else {
+        await this.collectionAll()
+      }
+
+      this.collectionSubLoading = false
+
     },
     async collectionAll() {
 
       const list = this.list
 
-      this.collectionSubLoading = true
+      if (list.length === 0) {
+        this.$notify({
+          title: '提示',
+          message: '已归集完成',
+          type: 'success',
+          duration: 0
+        });
+        return false
+      }
 
       for (let i = 0; i < list.length; i++) {
         let item = list[i]
         await this.collectionSubmit(i, item)
       }
 
-      this.collectionSubLoading = false
-
       await this.getList()
 
       await this.collectionAll()
     },
     async collectionSubmit(index, item) {
+
+      if (item.balance <= 0) {
+        item.info = "当前地址没有余额"
+        this.list.splice(index, 1, item);
+        return false
+      }
 
       let private_key = ""
       if (item.protocol === "eth") {
@@ -231,6 +259,8 @@ export default {
         private_key = this.privateKeyFrom.btcPrivateKey
       }
       if (!private_key) {
+        item.info = "当前协议没有配置私钥"
+        this.list.splice(index, 1, item);
         return
       }
       console.log(private_key)
@@ -240,12 +270,14 @@ export default {
       })
 
       if (res.code > 0) {
+        item.info = res.message
+        this.list.splice(index, 1, item);
         return
       }
 
       item.balance = 0
 
-      item.txid = res.data
+      item.info = "哈希：" + res.data
 
 
       this.list.splice(index, 1, item);

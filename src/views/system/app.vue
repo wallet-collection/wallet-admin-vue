@@ -53,16 +53,6 @@
           </template>
         </el-table-column>
         <el-table-column
-            :show-overflow-tooltip="true"
-            label="来源"
-            prop="create_origin">
-        </el-table-column>
-        <el-table-column
-            :show-overflow-tooltip="true"
-            label="合约哈希"
-            prop="create_init_hash">
-        </el-table-column>
-        <el-table-column
             label="状态">
           <template slot-scope="scope">
             <el-tag :type="scope.row.status | statusFilterType">{{ scope.row.status | statusFilterName }}</el-tag>
@@ -83,10 +73,13 @@
           </template>
         </el-table-column>
         <el-table-column
+            width="120"
             label="操作"
             fixed="right">
           <template slot-scope="scope">
             <el-button type="text" size="small" @click.native="handleForm(scope.$index, scope.row)">编辑
+            </el-button>
+            <el-button type="text" size="small" @click.native="handleCollection(scope.$index, scope.row)">归集地址
             </el-button>
           </template>
         </el-table-column>
@@ -136,12 +129,130 @@
         <el-button type="primary" @click.native="formSubmit()" :loading="formLoading">提交</el-button>
       </div>
     </el-dialog>
+
+    <!--表单-->
+    <el-dialog
+        :close-on-click-modal="false"
+        title="应用归集列表"
+        :visible.sync="collectionVisible"
+        :before-close="hideCollection"
+        width="85%"
+        top="5vh">
+      <el-form :inline="true" :model="collectionQuery" class="query-form" size="mini">
+        <el-form-item class="query-form-item" label="appid">
+          <el-input v-model="collectionQuery.appid" placeholder="appid"></el-input>
+        </el-form-item>
+        <el-form-item class="query-form-item" label="网络名称">
+          <el-input v-model="collectionQuery.network_name" placeholder="网络名称"></el-input>
+        </el-form-item>
+        <el-form-item class="query-form-item" label="币种符号">
+          <el-input v-model="collectionQuery.coin_symbol" placeholder="币种符号"></el-input>
+        </el-form-item>
+
+        <el-form-item>
+          <el-button-group>
+            <el-button type="primary" icon="el-icon-refresh" @click="onCollectionReset"></el-button>
+            <el-button type="primary" icon="search" @click="onCollectionSubmit">查询</el-button>
+            <el-button type="primary" @click.native="handleCollectionForm(null,null)">新增</el-button>
+          </el-button-group>
+        </el-form-item>
+      </el-form>
+      <el-scrollbar class="table-scrollbar" wrap-style="overflow-x: hidden;">
+        <el-table
+            v-loading="collectionLoading"
+            :data="collectionList"
+            style="width: 100%;">
+          <el-table-column
+              width="60"
+              label="ID"
+              prop="id"
+              fixed>
+          </el-table-column>
+          <el-table-column
+              width="150"
+              label="APPID"
+              fixed>
+            <template slot-scope="scope">
+              <span>{{ scope.row.appid }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+              width="120"
+              label="网络名称"
+              fixed>
+            <template slot-scope="scope">
+              <span>{{ scope.row.network_name }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+              width="120"
+              label="币种符号"
+              fixed>
+            <template slot-scope="scope">
+              <span>{{ scope.row.coin_symbol }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+              :show-overflow-tooltip="true"
+              label="归集地址"
+              prop="address">
+          </el-table-column>
+          <el-table-column
+              width="180"
+              label="创建时间">
+            <template slot-scope="scope">
+              <span>{{ scope.row.create_time | parseTime }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+              width="180"
+              label="最后更新时间">
+            <template slot-scope="scope">
+              <span>{{ scope.row.modified_time | parseTime }}</span>
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-scrollbar>
+
+
+      <!--表单-->
+      <el-dialog
+          :close-on-click-modal="false"
+          :title="collectionFormMap[collectionFormName]"
+          :visible.sync="collectionFormVisible"
+          :before-close="hideCollectionForm"
+          append-to-body
+          top="5vh">
+        <el-form :model="collectionFormData" :rules="collectionFormRules" ref="dataCollectionForm">
+          <el-form-item label="APPID" prop="appid">
+            <el-input v-model="collectionFormData.appid" disabled auto-complete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="网络名称" prop="network_name">
+            <el-input v-model="collectionFormData.network_name" auto-complete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="币种名称" prop="coin_symbol">
+            <el-input v-model="collectionFormData.coin_symbol" auto-complete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="归集地址" prop="address">
+            <el-input v-model="collectionFormData.address" auto-complete="off"></el-input>
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click.native="hideCollectionForm">取消</el-button>
+          <el-button type="primary" @click.native="formCollectionSubmit()" :loading="collectionFormLoading">提交</el-button>
+        </div>
+      </el-dialog>
+
+    </el-dialog>
+
+
   </div>
 
 </template>
 
 <script>
 import {appList, appSave} from "../../api/system/app";
+import {appCollectionList, appCollectionSave} from "../../api/system/app_collection";
 
 const formJson = {
   id: "",
@@ -151,6 +262,14 @@ const formJson = {
   withdraw_private_key: "",
   name: "",
   status: 0,
+};
+
+const collectionFormJson = {
+  id: "",
+  appid: "",
+  network_name: "",
+  coin_symbol: "",
+  address: "",
 };
 export default {
   computed: {
@@ -176,24 +295,53 @@ export default {
       formVisible: false,
       formData: formJson,
       formRules: {
-        lang: [
-          {required: true, message: "请选择语言", trigger: "change"}
+        developer_id: [
+          {required: true, message: "请输入开发者ID", trigger: "blur"}
         ],
-        key: [
-          {required: true, message: "请输入Key", trigger: "blur"}
+        appid: [
+          {required: true, message: "请输入appid", trigger: "blur"}
         ],
-        title: [
-          {required: true, message: "请输入标题", trigger: "blur"}
+        secret_key: [
+          {required: true, message: "请输入密钥", trigger: "blur"}
         ],
-        content: [
-          {required: true, message: "请输入内容", trigger: "blur"}
+        name: [
+          {required: true, message: "请输入应用名称", trigger: "blur"}
         ],
         status: [
           {required: true, message: "请选择状态", trigger: "change"}
         ]
       },
-      deleteLoading: false,
-      syncStatusLoading: false,
+
+      collectionVisible: false,
+      collectionQuery: {
+        appid: "",
+        network_name: "",
+        coin_symbol: "",
+      },
+      collectionList: [],
+      collectionTotal: 0,
+      collectionLoading: true,
+      collectionIndex: null,
+      collectionFormName: null,
+      collectionFormMap: {
+        add: "新增",
+        edit: "编辑"
+      },
+      collectionFormLoading: false,
+      collectionFormVisible: false,
+      collectionFormData: collectionFormJson,
+      collectionFormRules: {
+        network_name: [
+          {required: true, message: "请输入网络名称", trigger: "blur"}
+        ],
+        coin_symbol: [
+          {required: true, message: "请输入币种符号", trigger: "blur"}
+        ],
+        address: [
+          {required: true, message: "请输入归集地址", trigger: "blur"}
+        ],
+      },
+      collectionDeleteLoading: false,
     };
   },
   methods: {
@@ -296,6 +444,113 @@ export default {
         }
       });
     },
+
+    //
+    hideCollection() {
+      // 更改值
+      this.collectionVisible = !this.collectionVisible;
+      return true;
+    },
+    //
+    handleCollection(index, row) {
+      this.collectionVisible = true;
+      this.collectionQuery.appid = row.appid
+      this.getListCollection()
+    },
+
+    onCollectionReset() {
+      this.$router.push({
+        path: ""
+      });
+      this.collectionQuery = {
+        appid: this.collectionQuery.appid,
+        network_name: "",
+        coin_symbol: "",
+      };
+      this.getListCollection();
+    },
+    onCollectionSubmit() {
+      this.$router.push({
+        path: "",
+        query: this.collectionQuery
+      });
+      this.getListCollection();
+    },
+    getListCollection() {
+      this.collectionLoading = true;
+      appCollectionList(this.collectionQuery)
+          .then(response => {
+            this.collectionLoading = false;
+            if (response.code) {
+              this.$message.error(response.message);
+            }
+            this.collectionList = response.data.list || [];
+            this.collectionTotal = response.data.total || 0;
+          })
+          .catch(() => {
+            this.collectionLoading = false;
+            this.collectionList = [];
+            this.collectionTotal = 0;
+          });
+    },
+
+    // 隐藏表单
+    hideCollectionForm() {
+      // 更改值
+      this.collectionFormVisible = !this.collectionFormVisible;
+      return true;
+    },
+    // 刷新表单
+    resetCollectionForm() {
+      if (this.$refs["dataCollectionForm"]) {
+        // 清空验证信息表单
+        this.$refs["dataCollectionForm"].clearValidate();
+        // 刷新表单
+        this.$refs["dataCollectionForm"].resetFields();
+      }
+    },
+    // 显示表单
+    handleCollectionForm(index, row) {
+      this.collectionFormVisible = true;
+      this.collectionFormData = JSON.parse(JSON.stringify(collectionFormJson));
+      this.collectionFormData.appid = this.collectionQuery.appid
+      if (row !== null) {
+        this.collectionFormData = Object.assign({}, row);
+      }
+      this.collectionFormName = "add";
+      if (index !== null) {
+        this.collectionIndex = index;
+        this.collectionFormName = "edit";
+      }
+    },
+    formCollectionSubmit() {
+      this.$refs["dataCollectionForm"].validate(valid => {
+        if (valid) {
+          this.collectionFormLoading = true;
+          let data = Object.assign({}, this.collectionFormData);
+          appCollectionSave(data, this.collectionFormName).then(response => {
+            this.collectionFormLoading = false;
+            if (response.code) {
+              this.$message.error(response.message);
+              return false;
+            }
+            if (this.collectionFormName === "add") {
+              // 向头部添加数据
+              if (response.data && response.data.id) {
+                data.id = response.data.id;
+                data.create_time = new Date()
+                data.modified_time = new Date()
+                this.collectionList.unshift(data);
+              }
+            }
+            this.$message.success("操作成功");
+            // 刷新表单
+            this.resetCollectionForm();
+            this.hideCollectionForm()
+          });
+        }
+      });
+    },
   },
   filters: {
     statusFilterType(status) {
@@ -312,20 +567,6 @@ export default {
       };
       return statusMap[status];
     },
-    syncStatusFilterType(syncStatus) {
-      const syncStatusMap = {
-        0: "danger",
-        1: "success",
-      };
-      return syncStatusMap[syncStatus];
-    },
-    syncStatusFilterName(syncStatus) {
-      const syncStatusMap = {
-        0: "停止",
-        1: "已启动",
-      };
-      return syncStatusMap[syncStatus];
-    }
   },
   mounted() {
   },
