@@ -107,4 +107,24 @@ export const authRoutes = [
             },
         ]
     },
+    {
+        path: "/address",
+        component: Home,
+        icon: "icon-chanpin",
+        name: "地址管理",
+        meta: {
+            authRule: ["/address"]
+        },
+        children: [
+            {
+                path: "address",
+                component: () => import('../views/address/address.vue'),
+                name: "归集列表",
+                icon: "",
+                meta: {
+                    authRule: ["/admin/address/list"]
+                },
+            },
+        ]
+    },
 ]

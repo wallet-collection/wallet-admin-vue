@@ -1,8 +1,7 @@
 import { StaticJsonRpcProvider, Web3Provider } from '@ethersproject/providers'
-import getNodeUrl from "./getRpcUrl";
 
-export function simpleRpcProvider(chainId) {
-    return new StaticJsonRpcProvider(getNodeUrl(chainId))
+export function simpleRpcProvider(url) {
+    return new StaticJsonRpcProvider(url)
 }
 
 export const web3Provider = () => {

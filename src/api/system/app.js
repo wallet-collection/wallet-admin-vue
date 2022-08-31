@@ -21,21 +21,3 @@ export function appSave(data, formName, method = "post") {
         data: data
     });
 }
-
-//
-export function appDelete(data) {
-    return axios({
-        url: "/admin/app/delete",
-        method: "post",
-        data: data
-    });
-}
-
-//
-export function appSyncStatus(data) {
-    return axios({
-        url: "/admin/app/syncStatus",
-        method: "post",
-        data: data
-    });
-}

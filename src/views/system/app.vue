@@ -88,8 +88,6 @@
           <template slot-scope="scope">
             <el-button type="text" size="small" @click.native="handleForm(scope.$index, scope.row)">编辑
             </el-button>
-            <el-button type="text" size="small" @click.native="handleDel(scope.$index, scope.row)">删除
-            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -120,12 +118,6 @@
         <el-form-item label="密钥" prop="secret_key">
           <el-input v-model="formData.secret_key" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="来源" prop="create_origin">
-          <el-input v-model="formData.create_origin" auto-complete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="合约哈希" prop="create_init_hash">
-          <el-input v-model="formData.create_init_hash" auto-complete="off"></el-input>
-        </el-form-item>
         <el-form-item label="提现的私钥" prop="withdraw_private_key">
           <el-input v-model.number="formData.withdraw_private_key" auto-complete="off"></el-input>
         </el-form-item>
@@ -149,15 +141,13 @@
 </template>
 
 <script>
-import {appDelete, appList, appSave} from "../../api/system/app";
+import {appList, appSave} from "../../api/system/app";
 
 const formJson = {
   id: "",
   developer_id: "",
   appid: "",
   secret_key: "",
-  create_origin: "",
-  create_init_hash: "",
   withdraw_private_key: "",
   name: "",
   status: 0,
@@ -305,35 +295,6 @@ export default {
           });
         }
       });
-    },
-    // 删除
-    handleDel(index, row) {
-      if (row.id) {
-        this.$confirm("确认删除该记录吗?", "提示", {
-          type: "warning"
-        })
-            .then(() => {
-              let para = {id: row.id};
-              this.deleteLoading = true;
-              appDelete(para)
-                  .then(response => {
-                    this.deleteLoading = false;
-                    if (response.code) {
-                      this.$message.error(response.message);
-                      return false;
-                    }
-                    this.$message.success("删除成功");
-                    // 刷新数据
-                    this.list.splice(index, 1);
-                  })
-                  .catch(() => {
-                    this.deleteLoading = false;
-                  });
-            })
-            .catch(() => {
-              this.$message.error("取消删除");
-            });
-      }
     },
   },
   filters: {

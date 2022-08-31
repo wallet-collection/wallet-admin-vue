@@ -34,7 +34,7 @@ service.interceptors.response.use(
     response => {
         const data = response.data;
         if (data.code) {
-            if (data.code === 10001) {
+            if (data.code === 10002) {
                 store.dispatch("logout").then(() => {
                     Message.error("验证失败,请重新登录");
                     router.push({

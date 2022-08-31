@@ -163,6 +163,12 @@
         <el-form-item label="确认数量" prop="confirms">
           <el-input v-model.number="formData.confirms" auto-complete="off"></el-input>
         </el-form-item>
+        <el-form-item label="来源" prop="create_origin">
+          <el-input v-model="formData.create_origin" :disabled="formName === 'edit'" auto-complete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="合约哈希" prop="create_init_hash">
+          <el-input v-model="formData.create_init_hash" :disabled="formName === 'edit'" auto-complete="off"></el-input>
+        </el-form-item>
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="formData.status">
             <el-radio :label="0">禁用</el-radio>
@@ -340,6 +346,8 @@ const formJson = {
   call_max_retry: 0,
   confirms: 0,
   status: 0,
+  create_origin: "",
+  create_init_hash: "",
 };
 const rpcFormJson = {
   id: "",
