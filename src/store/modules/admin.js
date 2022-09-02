@@ -32,7 +32,7 @@ const actions = {
         return new Promise((resolve, reject) => {
             authRule()
                 .then(res => {
-                    if (res.code === 10002) {
+                    if (res.code > 0) {
                         reject()
                         return false
                     }
