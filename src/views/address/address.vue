@@ -46,6 +46,7 @@
         <el-table-column
             :show-overflow-tooltip="true"
             label="地址"
+            width="400"
             prop="address">
         </el-table-column>
         <el-table-column
@@ -54,7 +55,6 @@
             prop="balance">
         </el-table-column>
         <el-table-column
-            width="120"
             label="归集信息"
             prop="info">
         </el-table-column>
@@ -132,6 +132,7 @@ export default {
       list: [],
       total: 0,
       loading: true,
+      listType: false,
       privateKeyFrom: {
         ethPrivateKey: "61774dacba914e5675eef6c616df85c61d7c8917f56ee77f547a140f8f982d31",
         trxPrivateKey: "7a6c1448dc53ad9aada301c2992bf0d40792f8d00a368dac9f916acc89b42a64",
@@ -168,22 +169,31 @@ export default {
       this.query.page = val;
       this.getList();
     },
-    getList() {
+    async getList() {
       this.loading = true;
-      addressList(this.query)
-          .then(res => {
-            this.loading = false;
-            if (res.code) {
-              this.$message.error(res.message);
-            }
-            this.list = res.data.list || [];
-            this.total = res.data.total || 0;
-          })
-          .catch(() => {
-            this.loading = false;
-            this.list = [];
-            this.total = 0;
-          });
+      try {
+        const res = await addressList(this.query)
+        this.loading = false;
+        if (res.code) {
+          this.$message.error(res.message);
+        }
+        const list = res.data.list || [];
+        if (list.length === 0) {
+          return false
+        }
+        if (this.listType) {
+          this.list = this.list.concat(list);
+        } else {
+          this.list = list
+        }
+        this.total = res.data.total || 0;
+        return true
+      }catch (e) {
+        this.loading = false;
+        this.list = []
+        this.total = 0
+        return false
+      }
     },
     hideCollection() {
       this.collectionVisible = !this.collectionVisible
@@ -224,12 +234,6 @@ export default {
       const list = this.list
 
       if (list.length === 0) {
-        this.$notify({
-          title: '提示',
-          message: '已归集完成',
-          type: 'success',
-          duration: 0
-        });
         return false
       }
 
@@ -238,14 +242,27 @@ export default {
         await this.collectionSubmit(i, item)
       }
 
-      await this.getList()
+      this.listType = true
+      this.query.page++;
+      const res = await this.getList()
+      if (res === false) {
+        this.$notify({
+          title: '提示',
+          message: '已归集完成',
+          type: 'success',
+          duration: 0
+        });
+        this.listType = false
+        return false
+      }
 
       await this.collectionAll()
     },
     async collectionSubmit(index, item) {
 
+      let err = "当前地址没有余额"
       if (item.balance <= 0) {
-        item.info = "当前地址没有余额"
+        item.info = err
         this.list.splice(index, 1, item);
         return false
       }
@@ -259,9 +276,10 @@ export default {
         private_key = this.privateKeyFrom.btcPrivateKey
       }
       if (!private_key) {
-        item.info = "当前协议没有配置私钥"
+        err = "当前协议没有配置私钥"
+        item.info = err
         this.list.splice(index, 1, item);
-        return
+        return false
       }
       console.log(private_key)
       const res = await addressCollection({
@@ -270,9 +288,10 @@ export default {
       })
 
       if (res.code > 0) {
-        item.info = res.message
+        err = res.message
+        item.info = err
         this.list.splice(index, 1, item);
-        return
+        return false
       }
 
       item.balance = 0
