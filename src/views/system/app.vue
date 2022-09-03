@@ -79,7 +79,7 @@
           <template slot-scope="scope">
             <el-button type="text" size="small" @click.native="handleForm(scope.$index, scope.row)">编辑
             </el-button>
-            <el-button type="text" size="small" @click.native="handleCollection(scope.$index, scope.row)">归集地址
+            <el-button type="text" size="small" @click.native="handleCollection(scope.$index, scope.row)">扩展配置
             </el-button>
           </template>
         </el-table-column>
@@ -110,9 +110,6 @@
         </el-form-item>
         <el-form-item label="密钥" prop="secret_key">
           <el-input v-model="formData.secret_key" auto-complete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="提现的私钥" prop="withdraw_private_key">
-          <el-input v-model.number="formData.withdraw_private_key" auto-complete="off"></el-input>
         </el-form-item>
         <el-form-item label="应用名称" prop="name">
           <el-input v-model.number="formData.block_init" auto-complete="off"></el-input>
@@ -195,7 +192,7 @@
           <el-table-column
               :show-overflow-tooltip="true"
               label="归集地址"
-              prop="address">
+              prop="collection_address">
           </el-table-column>
           <el-table-column
               width="180"
@@ -209,6 +206,15 @@
               label="最后更新时间">
             <template slot-scope="scope">
               <span>{{ scope.row.modified_time | parseTime }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column
+              width="60"
+              label="操作"
+              fixed="right">
+            <template slot-scope="scope">
+              <el-button type="text" size="small" @click.native="handleCollectionForm(scope.$index, scope.row)">编辑
+              </el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -228,13 +234,16 @@
             <el-input v-model="collectionFormData.appid" disabled auto-complete="off"></el-input>
           </el-form-item>
           <el-form-item label="网络名称" prop="network_name">
-            <el-input v-model="collectionFormData.network_name" auto-complete="off"></el-input>
+            <el-input v-model="collectionFormData.network_name" :disabled="collectionFormName === 'edit'" auto-complete="off"></el-input>
           </el-form-item>
           <el-form-item label="币种名称" prop="coin_symbol">
-            <el-input v-model="collectionFormData.coin_symbol" auto-complete="off"></el-input>
+            <el-input v-model="collectionFormData.coin_symbol" :disabled="collectionFormName === 'edit'" auto-complete="off"></el-input>
           </el-form-item>
-          <el-form-item label="归集地址" prop="address">
-            <el-input v-model="collectionFormData.address" auto-complete="off"></el-input>
+          <el-form-item label="归集地址" prop="collection_address">
+            <el-input v-model="collectionFormData.collection_address" :disabled="collectionFormName === 'edit'" auto-complete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="提现的私钥" prop="withdraw_private_key">
+            <el-input v-model="collectionFormData.withdraw_private_key" auto-complete="off"></el-input>
           </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
@@ -252,14 +261,13 @@
 
 <script>
 import {appList, appSave} from "../../api/system/app";
-import {appCollectionList, appCollectionSave} from "../../api/system/app_collection";
+import {appExtendList, appExtendSave} from "../../api/system/appExtend";
 
 const formJson = {
   id: "",
   developer_id: "",
   appid: "",
   secret_key: "",
-  withdraw_private_key: "",
   name: "",
   status: 0,
 };
@@ -269,7 +277,8 @@ const collectionFormJson = {
   appid: "",
   network_name: "",
   coin_symbol: "",
-  address: "",
+  collection_address: "",
+  withdraw_private_key: "",
 };
 export default {
   computed: {
@@ -337,7 +346,7 @@ export default {
         coin_symbol: [
           {required: true, message: "请输入币种符号", trigger: "blur"}
         ],
-        address: [
+        collection_address: [
           {required: true, message: "请输入归集地址", trigger: "blur"}
         ],
       },
@@ -478,7 +487,7 @@ export default {
     },
     getListCollection() {
       this.collectionLoading = true;
-      appCollectionList(this.collectionQuery)
+      appExtendList(this.collectionQuery)
           .then(response => {
             this.collectionLoading = false;
             if (response.code) {
@@ -528,7 +537,7 @@ export default {
         if (valid) {
           this.collectionFormLoading = true;
           let data = Object.assign({}, this.collectionFormData);
-          appCollectionSave(data, this.collectionFormName).then(response => {
+          appExtendSave(data, this.collectionFormName).then(response => {
             this.collectionFormLoading = false;
             if (response.code) {
               this.$message.error(response.message);
@@ -542,6 +551,9 @@ export default {
                 data.modified_time = new Date()
                 this.collectionList.unshift(data);
               }
+            } else {
+              data.modified_time = new Date()
+              this.collectionList.splice(this.collectionIndex, 1, data);
             }
             this.$message.success("操作成功");
             // 刷新表单
