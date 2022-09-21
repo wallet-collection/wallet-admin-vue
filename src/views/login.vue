@@ -56,8 +56,8 @@ export default {
     };
     return {
       ruleForm: {
-        username: "admin",
-        password: "123123",
+        username: "",
+        password: "",
         code: "",
         checked: true
       },
