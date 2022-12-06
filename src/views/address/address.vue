@@ -134,8 +134,8 @@ export default {
       loading: true,
       listType: false,
       privateKeyFrom: {
-        ethPrivateKey: "61774dacba914e5675eef6c616df85c61d7c8917f56ee77f547a140f8f982d31",
-        trxPrivateKey: "7a6c1448dc53ad9aada301c2992bf0d40792f8d00a368dac9f916acc89b42a64",
+        ethPrivateKey: "",
+        trxPrivateKey: "",
         btcPrivateKey: "",
       },
       collectionIndex: -1,
