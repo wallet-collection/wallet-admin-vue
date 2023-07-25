@@ -240,13 +240,13 @@
             <el-input v-model="collectionFormData.coin_symbol" :disabled="collectionFormName === 'edit'" auto-complete="off"></el-input>
           </el-form-item>
           <el-form-item label="归集地址" prop="collection_address">
-            <el-input v-model="collectionFormData.collection_address" :disabled="collectionFormName === 'edit'" auto-complete="off"></el-input>
+            <el-input v-model="collectionFormData.collection_address" auto-complete="off"></el-input>
           </el-form-item>
           <el-form-item label="归集最大数量（保留精度）" prop="collection_max">
             <el-input v-model="collectionFormData.collection_max" auto-complete="off"></el-input>
           </el-form-item>
           <el-form-item label="归集私钥" prop="collection_private_key">
-            <el-input v-model="collectionFormData.collection_private_key" :disabled="collectionFormName === 'edit'" auto-complete="off"></el-input>
+            <el-input v-model="collectionFormData.collection_private_key" auto-complete="off"></el-input>
           </el-form-item>
           <el-form-item label="提现的私钥" prop="withdraw_private_key">
             <el-input v-model="collectionFormData.withdraw_private_key" auto-complete="off"></el-input>

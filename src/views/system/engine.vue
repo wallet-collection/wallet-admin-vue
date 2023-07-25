@@ -130,6 +130,12 @@
         <el-form-item label="协议" prop="protocol">
           <el-input v-model="formData.protocol" :disabled="formName === 'edit'" auto-complete="off"></el-input>
         </el-form-item>
+        <el-form-item label="是否同步充值" prop="status">
+          <el-radio-group v-model="formData.is_recharge">
+            <el-radio :label="0">否</el-radio>
+            <el-radio :label="1">是</el-radio>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item label="合约地址" prop="contract">
           <el-input v-model="formData.contract" auto-complete="off"></el-input>
         </el-form-item>
@@ -334,6 +340,7 @@ const formJson = {
   network_name: "",
   coin_symbol: "",
   protocol: "",
+  is_recharge: 1,
   contract: "",
   contract_type: "",
   decimals: 0,
