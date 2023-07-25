@@ -242,13 +242,13 @@
           <el-form-item label="归集地址" prop="collection_address">
             <el-input v-model="collectionFormData.collection_address" auto-complete="off"></el-input>
           </el-form-item>
-          <el-form-item label="归集最大数量（保留精度）" prop="collection_max">
+          <el-form-item label="自动归集最大数量(如USDT精度为6,那么满足1USDT就归集的话这里就输入1000000)" prop="collection_max">
             <el-input v-model="collectionFormData.collection_max" auto-complete="off"></el-input>
           </el-form-item>
-          <el-form-item label="归集私钥" prop="collection_private_key">
+          <el-form-item label="归集私钥（为空表示不修改）" prop="collection_private_key">
             <el-input v-model="collectionFormData.collection_private_key" auto-complete="off"></el-input>
           </el-form-item>
-          <el-form-item label="提现的私钥" prop="withdraw_private_key">
+          <el-form-item label="提现的私钥（为空表示不修改）" prop="withdraw_private_key">
             <el-input v-model="collectionFormData.withdraw_private_key" auto-complete="off"></el-input>
           </el-form-item>
         </el-form>
