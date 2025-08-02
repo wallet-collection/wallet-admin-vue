@@ -9,7 +9,7 @@
         <el-input v-model="query.coin_symbol" placeholder="币种符号"></el-input>
       </el-form-item>
       <el-form-item class="query-form-item" label="协议">
-        <el-input v-model="query.protocol" placeholder="协议"></el-input>
+        <el-input v-model="query.protocol" placeholder="协议（eth，trx，btc）"></el-input>
       </el-form-item>
       <el-form-item class="query-form-item">
         <el-select v-model="query.status" placeholder="状态">
@@ -127,7 +127,7 @@
         <el-form-item label="币种名称" prop="coin_symbol">
           <el-input v-model="formData.coin_symbol" :disabled="formName === 'edit'" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="协议" prop="protocol">
+        <el-form-item label="协议（eth，trx，btc）" prop="protocol">
           <el-input v-model="formData.protocol" :disabled="formName === 'edit'" auto-complete="off"></el-input>
         </el-form-item>
         <el-form-item label="是否同步充值" prop="status">
@@ -136,10 +136,10 @@
             <el-radio :label="1">是</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="合约地址" prop="contract">
+        <el-form-item label="币种合约地址" prop="contract">
           <el-input v-model="formData.contract" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="合约类型" prop="contract_type">
+        <el-form-item label="合约类型，以太坊协议的统一用ERC20（如，ERC20，TRC20，TRC10）" prop="contract_type">
           <el-input v-model="formData.contract_type" auto-complete="off"></el-input>
         </el-form-item>
         <el-form-item label="精度" prop="decimals">
@@ -148,19 +148,19 @@
         <el-form-item label="初始块（默认读取最新块）" prop="block_init">
           <el-input v-model.number="formData.block_init" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="获取最新块的等待时间" prop="block_after_time">
+        <el-form-item label="获取最新块的等待时间（毫秒）" prop="block_after_time">
           <el-input v-model.number="formData.block_after_time" auto-complete="off"></el-input>
         </el-form-item>
         <el-form-item label="交易凭证worker数量" prop="receipt_count">
           <el-input v-model.number="formData.receipt_count" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="获取交易信息的等待时间" prop="receipt_after_time">
+        <el-form-item label="获取交易信息的等待时间（毫秒）" prop="receipt_after_time">
           <el-input v-model.number="formData.receipt_after_time" auto-complete="off"></el-input>
         </el-form-item>
         <el-form-item label="回调的worker数量" prop="call_count">
           <el-input v-model.number="formData.call_count" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="回调的等待时间" prop="call_after_time">
+        <el-form-item label="回调的等待时间（毫秒）" prop="call_after_time">
           <el-input v-model.number="formData.call_after_time" auto-complete="off"></el-input>
         </el-form-item>
         <el-form-item label="回调最大重试次数" prop="call_max_retry">
@@ -169,10 +169,10 @@
         <el-form-item label="确认数量" prop="confirms">
           <el-input v-model.number="formData.confirms" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="来源" prop="create_origin">
+        <el-form-item label="工具合约地址" prop="create_origin">
           <el-input v-model="formData.create_origin" :disabled="formName === 'edit'" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="合约哈希" prop="create_init_hash">
+        <el-form-item label="工具合约哈希码" prop="create_init_hash">
           <el-input v-model="formData.create_init_hash" :disabled="formName === 'edit'" auto-complete="off"></el-input>
         </el-form-item>
         <el-form-item label="状态" prop="status">
@@ -430,6 +430,12 @@ export default {
         ],
         confirms: [
           {required: true, message: "请输入确认块", trigger: "blur"}
+        ],
+        create_origin: [
+          {required: true, message: "请输入工具合约的地址", trigger: "blur"}
+        ],
+        create_init_hash: [
+          {required: true, message: "请输入工具合约哈希码", trigger: "blur"}
         ],
         status: [
           {required: true, message: "请选择状态", trigger: "change"}
