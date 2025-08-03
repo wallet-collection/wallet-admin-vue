@@ -130,7 +130,7 @@
         <el-form-item label="协议（eth，trx，btc）" prop="protocol">
           <el-input v-model="formData.protocol" :disabled="formName === 'edit'" auto-complete="off"></el-input>
         </el-form-item>
-        <el-form-item label="是否同步充值" prop="status">
+        <el-form-item label="是否同步充值" prop="is_recharge">
           <el-radio-group v-model="formData.is_recharge">
             <el-radio :label="0">否</el-radio>
             <el-radio :label="1">是</el-radio>
