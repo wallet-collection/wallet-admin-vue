@@ -21,6 +21,7 @@
           <el-button type="primary" icon="search" @click="handleCollection(-1)" :loading="collectionSubLoading">归集全部</el-button>
         </el-button-group>
       </el-form-item>
+
     </el-form>
 
     <el-scrollbar class="table-scrollbar" wrap-style="overflow-x: hidden;">
